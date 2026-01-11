@@ -132,10 +132,10 @@ func (s *Server) setRoutes() *chi.Mux {
 			r.Use(render.SetContentType(render.ContentTypeJSON))
 
 			r.Route("/dashdata", func(r chi.Router) {
-				r.Get("/data", a.GetDashboardData)            // GET /dashdata/data
-				r.Get("/overshared", a.GetOversharedLicenses) // GET /dashdata/overshared
-				r.Put("/revoke/{licenseID}", a.Revoke)        // PUT /dashdata/revoke/123
-
+				r.Get("/data", a.GetDashboardData)                        // GET /dashdata/data
+				r.Get("/overshared", a.GetOversharedLicenses)             // GET /dashdata/overshared
+				r.With(paginate).Get("/publications", a.ListPublications) // GET /dashdata/publications
+				r.Put("/revoke/{licenseID}", a.Revoke)                    // PUT /dashdata/revoke/123
 			})
 		})
 
