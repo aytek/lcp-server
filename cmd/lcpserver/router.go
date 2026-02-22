@@ -135,7 +135,9 @@ func (s *Server) setRoutes() *chi.Mux {
 				r.Get("/data", a.GetDashboardData)                        // GET /dashdata/data
 				r.Get("/overshared", a.GetOversharedLicenses)             // GET /dashdata/overshared
 				r.With(paginate).Get("/publications", a.ListPublications) // GET /dashdata/publications
+				r.Delete("/publications/{publicationID}", a.DeletePublication) // DELETE /dashdata/publications/uuid
 				r.Put("/revoke/{licenseID}", a.Revoke)                    // PUT /dashdata/revoke/123
+				r.Post("/encrypt", a.EncryptEPUB)                        // POST /dashdata/encrypt
 			})
 		})
 
