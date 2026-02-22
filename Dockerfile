@@ -43,11 +43,11 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
         CGO_ENABLED=1 go build -tags "PLCP,MYSQL" -o /app/lcpserver ./cmd/lcpserver; \
       else \
         echo "No LCP library found for AMD64, building without PLCP support"; \
-        CGO_ENABLED=0 go build -tags "MYSQL" -o /app/lcpserver ./cmd/lcpserver; \
+        CGO_ENABLED=1 go build -tags "MYSQL" -o /app/lcpserver ./cmd/lcpserver; \
       fi; \
     else \
       echo "Building for $TARGETARCH without LCP library"; \
-      CGO_ENABLED=0 go build -tags "MYSQL" -o /app/lcpserver ./cmd/lcpserver; \
+      CGO_ENABLED=1 go build -tags "MYSQL" -o /app/lcpserver ./cmd/lcpserver; \
     fi
 
 ################################################################################
