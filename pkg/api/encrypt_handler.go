@@ -4,6 +4,7 @@ package api
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -111,11 +112,18 @@ func (a *APICtrl) EncryptEPUB(w http.ResponseWriter, r *http.Request) {
 	defer encryptedFile.Close()
 
 	// 9. Build metadata
+	// Convert hex checksum to base64 (ProcessEncryption returns hex,
+	// but POST /publications validates as base64)
+	checksumB64 := publication.Checksum
+	if raw, err := hex.DecodeString(publication.Checksum); err == nil {
+		checksumB64 = base64.StdEncoding.EncodeToString(raw)
+	}
+
 	metadata := EncryptResponse{
 		UUID:          publication.UUID,
 		EncryptionKey: base64.StdEncoding.EncodeToString(publication.EncryptionKey),
 		Size:          publication.Size,
-		Checksum:      publication.Checksum,
+		Checksum:      checksumB64,
 		ContentType:   publication.ContentType,
 		Title:         pubTitle,
 		FileName:      publication.FileName,
