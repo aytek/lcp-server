@@ -31,3 +31,9 @@ backups/
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+lcpencrypt
+lcpserver
+.claude/
+output/
+epub/
