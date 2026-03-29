@@ -7,6 +7,8 @@ package stor
 import (
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
@@ -61,8 +63,26 @@ func (s publicationStore) Count() (int64, error) {
 }
 
 func (s publicationStore) Get(uuid string) (*Publication, error) {
+	// it is important to use Unscoped() here to be able to retrieve publications that have been soft-deleted.
+	// licenses may still refer to publications that have been deleted, and fresh licenses must be generated for them.
 	var publication Publication
-	return &publication, s.db.Where("uuid = ?", uuid).First(&publication).Error
+	return &publication, s.db.Unscoped().Where("uuid = ?", uuid).First(&publication).Error
+}
+
+func (s publicationStore) GetByAltID(altID string) (*Publication, error) {
+	// Unscoped() is used here also to retrieve publications that have been soft-deleted. 
+	// There may be several publications identified by the same AltId if some were soft-deleted; 
+	// this is why the request orders the results by date created desc, so that the latest one,
+	// the only one potentially not deleted, is retained.
+	// TODO: consider adding a filter on the provider as well, to allow multiple publications with the same AltID from different providers. Problem: the API endpoint is called as a GET, with the altid as unique parameter (/publications/altid/xxx); potential evolution = /publications/altid/provider:xxx.  
+	var publication Publication
+	// debug: list all publications with this AltID
+	var publications []Publication
+	s.db.Unscoped().Where("alt_id = ?", altID).Order("created_at DESC").Find(&publications)
+	for _, pub := range publications {
+		log.Debugf("Publication with AltID %s: UUID=%s, Provider=%s, CreatedAt=%v, DeletedAt=%v", altID, pub.UUID, pub.Provider, pub.CreatedAt, pub.DeletedAt)
+	}
+	return &publication, s.db.Unscoped().Where("alt_id = ?", altID).Order("created_at DESC").First(&publication).Error
 }
 
 func (s publicationStore) Create(newPublication *Publication) error {
@@ -75,9 +95,4 @@ func (s publicationStore) Update(changedPublication *Publication) error {
 
 func (s publicationStore) Delete(deletedPublication *Publication) error {
 	return s.db.Delete(deletedPublication).Error
-}
-
-func (s publicationStore) GetByAltID(altID string) (*Publication, error) {
-	var publication Publication
-	return &publication, s.db.Where("alt_id = ?", altID).First(&publication).Error
 }

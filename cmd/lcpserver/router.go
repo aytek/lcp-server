@@ -96,6 +96,8 @@ func (s *Server) setRoutes() *chi.Mux {
 					r.Put("/", a.UpdatePublication)    // PUT /publications/123
 					r.Delete("/", a.DeletePublication) // DELETE /publications/123
 				})
+				// get publication by AltID
+				r.Get("/altid/{altID}", a.GetPublicationByAltID) // GET /publications/altid/alt123	
 			})
 
 			// LicenseInfo, CRUD
@@ -109,6 +111,11 @@ func (s *Server) setRoutes() *chi.Mux {
 					r.Put("/", a.UpdateLicense)    // PUT /licenseinfo/123
 					r.Delete("/", a.DeleteLicense) // DELETE /licenseinfo	/123
 				})
+			})
+
+			// License events
+			r.Route("/license-events/{licenseID}", func(r chi.Router) {
+				r.Get("/", a.ListLicenseEvents) // GET /license-events/123
 			})
 
 			// License generation
@@ -130,14 +137,17 @@ func (s *Server) setRoutes() *chi.Mux {
 		r.Group(func(r chi.Router) {
 			r.Use(AuthMiddleware(s.Config))
 			r.Use(render.SetContentType(render.ContentTypeJSON))
-
 			r.Route("/dashdata", func(r chi.Router) {
-				r.Get("/data", a.GetDashboardData)                        // GET /dashdata/data
-				r.Get("/overshared", a.GetOversharedLicenses)             // GET /dashdata/overshared
-				r.With(paginate).Get("/publications", a.ListPublications) // GET /dashdata/publications
-				r.Delete("/publications/{publicationID}", a.DeletePublication) // DELETE /dashdata/publications/uuid
-				r.Put("/revoke/{licenseID}", a.Revoke)                    // PUT /dashdata/revoke/123
-				r.Post("/encrypt", a.EncryptEPUB)                        // POST /dashdata/encrypt
+				r.Get("/data", a.GetDashboardData)            // GET /dashdata/data
+				r.Get("/overshared", a.GetOversharedLicenses) // GET /dashdata/overshared
+				r.Put("/revoke/{licenseID}", a.Revoke)        // PUT /dashdata/revoke/license123
+				r.Post("/encrypt", a.EncryptEPUB)             // POST /dashdata/encrypt
+				// these dashboard routes allow alt authentication before accessing crud functions
+				r.With(paginate).Get("/publications", a.ListPublications)                      // GET /dashdata/publications
+				r.Delete("/publications/{publicationID}", a.DeletePublication)                  // DELETE /dashdata/publication/publication123
+				r.With(paginate).Get("/user-licenses/{userID}", a.ListUserLicenses)            // GET /dashdata/user-licenses/user123
+				r.Get("/license-events/{licenseID}", a.ListLicenseEvents)                      // GET /dashdata/license-events/license123
+				r.Get("/report-licenses", a.ReportGeneratedLicenses)                           // GET /dashdata/report-licenses
 			})
 		})
 
