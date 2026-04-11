@@ -68,12 +68,13 @@ RUN apt-get update && apt-get install -y ca-certificates wget mupdf-tools && rm 
 ARG UID=10001
 RUN useradd --uid "${UID}" --user-group --system --no-log-init --create-home appuser
 
-# Copy the X509 test certificate (to be replaced later by the production certificate)
-COPY /config/cert-edrlab-test.pem ./config/
-COPY /config/privkey-edrlab-test.pem ./config/
-# For production, use:
-# COPY /config/cert-production.pem ./config/
-# COPY /config/privkey-production.pem ./config/
+# Copy the self-signed public X509 certificate (itech-owned CA).
+# The private key is NOT committed; it is written at runtime by docker-entrypoint.sh
+# from the LCPSERVER_PRIVATE_KEY_B64 environment variable.
+COPY /config/itech-drm/server-cert.pem ./config/itech-drm/
+COPY /config/itech-drm/ca-cert.pem ./config/itech-drm/
+COPY /docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # create a directory in the container for input files
 RUN mkdir /input
@@ -82,8 +83,11 @@ RUN chown -R appuser:appuser /input
 
 # create a directory in the container for external resources
 RUN mkdir /resources
-# the user of the container owns the directory. 
+# the user of the container owns the directory.
 RUN chown -R appuser:appuser /resources
+
+# appuser needs to write the runtime-injected private key into /config/itech-drm/.
+RUN chown -R appuser:appuser /config/itech-drm
 
 # from here on, the container runs as the non-privileged user
 USER appuser
@@ -95,5 +99,5 @@ COPY --from=build /app/lcpencrypt /app/
 # Expose the port that the application listens on.
 EXPOSE 8989
 
-# What the container should run when it is started.
-CMD ["/app/lcpserver"]
+# Write the private key from LCPSERVER_PRIVATE_KEY_B64, then start the server.
+ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -16,10 +16,12 @@ access:
   username: "lcp_api_user"
   password: "lcp_api_password"
 
-# Certificates for license signing
+# Certificates for license signing (self-signed, itech-owned CA).
+# The private key file is written at container startup by docker-entrypoint.sh
+# from the LCPSERVER_PRIVATE_KEY_B64 env var — never committed to git.
 certificate:
-  cert: "/path/to/cert.pem"
-  private_key: "/path/to/private_key.pem"
+  cert: "/config/itech-drm/server-cert.pem"
+  private_key: "/config/itech-drm/server-key.pem"
 
 # License configuration
 license:

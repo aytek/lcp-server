@@ -23,6 +23,11 @@
 # local config and log files
 config/privkey-production.pem
 config/cert-production.pem
+
+# Private keys — never commit. Inject via env vars at runtime.
+config/itech-drm/server-key.pem
+config/itech-drm/ca-key.pem
+config/itech-drm/ca-cert.srl
 config/lib/
 config-vm/
 logs/
